@@ -3,36 +3,11 @@ from discord.ext import commands
 from discord import app_commands
 import os
 import random
-import json
 
 # ─── Config from environment variables (Railway) ──────────────────
 TOKEN = os.environ["DISCORD_TOKEN"]
 PRIDE_BANNER_URL = os.environ.get("PRIDE_BANNER_URL", "")
 # ──────────────────────────────────────────────────────────────────
-
-# Saves each server's chosen channel to a file
-SETTINGS_FILE = "settings.json"
-
-def load_settings():
-    try:
-        with open(SETTINGS_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_settings(data):
-    with open(SETTINGS_FILE, "w") as f:
-        json.dump(data, f)
-
-def get_channel_id(guild_id: int):
-    settings = load_settings()
-    return settings.get(str(guild_id))
-
-def set_channel_id(guild_id: int, channel_id: int):
-    settings = load_settings()
-    settings[str(guild_id)] = channel_id
-    save_settings(settings)
-
 
 intents = discord.Intents.default()
 intents.members = True
@@ -40,7 +15,9 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-# ─── Fun message pools ────────────────────────────────────────────
+# Stores chosen channel per server in memory
+guild_channels = {}
+
 WELCOME_MESSAGES = [
     "just dropped in like a shooting star 🌟",
     "has entered the chat — and honestly? We're better for it 🎉",
@@ -70,46 +47,44 @@ WELCOME_TIPS = [
 ]
 
 
+def get_channel(guild: discord.Guild):
+    # If admin picked a channel use it
+    if guild.id in guild_channels:
+        ch = guild.get_channel(guild_channels[guild.id])
+        if ch:
+            return ch
+    # Otherwise auto find first channel bot can talk in
+    for ch in guild.text_channels:
+        if ch.permissions_for(guild.me).send_messages:
+            return ch
+    return None
+
+
 # ─── Bot Ready ────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
     await tree.sync()
     await bot.change_presence(
         status=discord.Status.online,
-        activity=discord.Activity(type=discord.ActivityType.watching, name="over the server 👀")
+        activity=discord.Activity(
+            type=discord.ActivityType.watching, name="over the server 👀"
+        )
     )
     print(f"✅ Bot is online as {bot.user}")
 
 
-# ─── Bot joins a new server ───────────────────────────────────────
-@bot.event
-async def on_guild_join(guild: discord.Guild):
-    # Find first channel it can talk in and tell admin to set the channel
-    for channel in guild.text_channels:
-        if channel.permissions_for(guild.me).send_messages:
-            embed = discord.Embed(
-                title="👋 Hey! I just joined!",
-                description=(
-                    "Thanks for adding me! 🎉\n\n"
-                    "To set up welcome & goodbye messages, an admin needs to run:\n\n"
-                    "**`/setchannel #your-channel-name`**\n\n"
-                    "Just pick any channel you want and I'll send all messages there!"
-                ),
-                color=discord.Color.from_rgb(180, 40, 20),
-            )
-            await channel.send(embed=embed)
-            break
-
-
-# ─── /setchannel command ──────────────────────────────────────────
-@tree.command(name="setchannel", description="Set the channel for welcome and goodbye messages")
-@app_commands.describe(channel="Pick the channel you want welcome/goodbye messages in")
+# ─── /setchannel ─────────────────────────────────────────────────
+@tree.command(name="setchannel", description="Choose which channel gets welcome and goodbye messages")
+@app_commands.describe(channel="Pick any channel you want")
 @app_commands.checks.has_permissions(administrator=True)
 async def setchannel(interaction: discord.Interaction, channel: discord.TextChannel):
-    set_channel_id(interaction.guild.id, channel.id)
+    guild_channels[interaction.guild.id] = channel.id
     embed = discord.Embed(
-        title="✅ Channel Set!",
-        description=f"Welcome and goodbye messages will now be sent in {channel.mention}!",
+        title="✅ Channel Updated!",
+        description=(
+            f"Welcome and goodbye messages will now be sent in {channel.mention}!\n\n"
+            f"You can change this anytime by running `/setchannel` again."
+        ),
         color=discord.Color.green(),
     )
     await interaction.response.send_message(embed=embed)
@@ -126,10 +101,7 @@ async def setchannel_error(interaction: discord.Interaction, error):
 # ─── Welcome ─────────────────────────────────────────────────────
 @bot.event
 async def on_member_join(member: discord.Member):
-    channel_id = get_channel_id(member.guild.id)
-    if not channel_id:
-        return
-    channel = bot.get_channel(channel_id)
+    channel = get_channel(member.guild)
     if not channel:
         return
 
@@ -153,10 +125,7 @@ async def on_member_join(member: discord.Member):
 # ─── Goodbye ─────────────────────────────────────────────────────
 @bot.event
 async def on_member_remove(member: discord.Member):
-    channel_id = get_channel_id(member.guild.id)
-    if not channel_id:
-        return
-    channel = bot.get_channel(channel_id)
+    channel = get_channel(member.guild)
     if not channel:
         return
 
@@ -177,7 +146,7 @@ async def on_member_remove(member: discord.Member):
     await channel.send(embed=embed)
 
 
-# ─── /embed slash command ─────────────────────────────────────────
+# ─── /embed ──────────────────────────────────────────────────────
 @tree.command(name="embed", description="Send a custom embed message")
 @app_commands.describe(
     title="Title of the embed",
@@ -214,14 +183,13 @@ async def embed_command(
         embed.set_image(url=image_url)
     elif PRIDE_BANNER_URL:
         embed.set_image(url=PRIDE_BANNER_URL)
-
     await interaction.response.send_message(embed=embed)
 
 
 @embed_command.error
 async def embed_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
-        await interaction.response.send_message("❌ You need **Manage Messages** permission to use this.", ephemeral=True)
+        await interaction.response.send_message("❌ You need **Manage Messages** permission.", ephemeral=True)
     else:
         await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
 
