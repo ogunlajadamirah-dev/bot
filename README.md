@@ -1,6 +1,6 @@
-# 🤖 Friend Server Bot
+# 🤖 Pride Bot — Discord Welcome & Goodbye Bot
 
-A Discord bot for your friend's server with welcome & goodbye in **one shared channel**, fun random messages, and a `/embed` command. Hosted free on Railway.
+A Discord bot for your friend's server with automatic welcome & goodbye messages, a custom PRIDE banner, and useful slash commands. Hosted on Railway.
 
 ---
 
@@ -17,6 +17,21 @@ friendbot/
 
 ---
 
+## ✅ Features
+
+| Feature | Details |
+|---|---|
+| 🎉 Welcome embed | Sent automatically when someone joins |
+| 👋 Goodbye embed | Sent automatically when someone leaves |
+| 🔍 Auto channel | Bot finds the first available channel automatically — no setup needed |
+| 🎲 Random messages | Fun unique messages every time |
+| 💡 Random tips | Each welcome shows a random tip for new members |
+| 📊 Stats | Shows account age and member count |
+| `/setchannel` | Admin can pick any channel for welcome/goodbye messages |
+| `/embed` | Post custom embeds with title, text, color and image |
+
+---
+
 ## 🔧 Step 1 — Create your Discord Bot
 
 1. Go to https://discord.com/developers/applications
@@ -24,71 +39,81 @@ friendbot/
 3. Go to the **Bot** tab → click **Add Bot**
 4. Under **Privileged Gateway Intents**, enable:
    - ✅ **Server Members Intent**
+   - ✅ **Message Content Intent**
 5. Click **Reset Token** → copy your token (keep it secret!)
 6. Go to **OAuth2 → URL Generator**:
-   - Scopes: `bot` + `applications.commands`
-   - Bot Permissions: `Send Messages`, `Embed Links`, `Manage Messages`
-7. Copy the generated URL → open it → invite the bot to your friend's server
+   - Scopes: ✅ `bot` + ✅ `applications.commands`
+   - Bot Permissions: ✅ `Send Messages` ✅ `Embed Links` ✅ `Manage Messages`
+7. Copy the generated URL → open it → invite the bot to your server
 
 ---
 
-## 📢 Step 2 — Get your channel ID
+## 🚂 Step 2 — Deploy on Railway
 
-1. In Discord, go to **Settings → Advanced → Enable Developer Mode**
-2. Right-click the channel you want (the ONE channel for welcome + goodbye)
-3. Click **Copy Channel ID**
-
----
-
-## 🚂 Step 3 — Deploy on Railway (free)
-
-1. Push these files to a **GitHub repo** (can be private)
+1. Push these files to a **GitHub repo**
 2. Go to https://railway.app → sign in with GitHub
 3. Click **New Project → Deploy from GitHub repo** → select your repo
-4. Go to your project → **Variables** tab → add these:
+4. Go to **Variables** tab → add these:
 
-| Variable name      | Value                        |
-|--------------------|------------------------------|
-| `DISCORD_TOKEN`    | Your bot token from Step 1   |
-| `MEMBER_CHANNEL_ID`| Your channel ID from Step 2  |
-
-5. Railway will automatically deploy and start the bot 🎉
-
----
-
-## ✅ Features
-
-| Feature | Details |
+| Variable | Value |
 |---|---|
-| 🎉 Welcome embed | Sent to your member channel when someone joins |
-| 👋 Goodbye embed | Sent to the **same** channel when someone leaves |
-| 🎲 Random messages | Fun unique messages every time — never repetitive |
-| 💡 Random tips | Each welcome shows a random tip for new members |
-| 📊 Member count | Shows account age and server member count |
-| `/embed` command | Post custom embeds (requires Manage Messages) |
+| `DISCORD_TOKEN` | Your bot token from Step 1 |
+| `PRIDE_BANNER_URL` | CDN link of your pride video/image (optional) |
+
+5. Railway deploys automatically 🎉
 
 ---
 
-## 🎨 Customizing messages
+## 📢 How to get PRIDE_BANNER_URL
 
-Open `bot.py` and edit the lists at the top:
+1. Upload `pride.webp` to any Discord channel
+2. Right-click the file → **Copy Link**
+3. Paste it as the value of `PRIDE_BANNER_URL` in Railway
 
-```python
-WELCOME_MESSAGES = [
-    "just dropped in like a shooting star 🌟",
-    # add your own lines here!
-]
+---
 
-GOODBYE_MESSAGES = [
-    "We'll keep the lights on for you 🕯️",
-    # add your own lines here!
-]
+## 🎮 Commands
+
+### `/setchannel` — Admin only
+Pick which channel gets welcome and goodbye messages.
+No setup needed — bot works automatically without this.
+But if your friend wants to change the channel:
+```
+/setchannel #any-channel-name
+```
+- Works with **any channel name**
+- Can be changed **anytime**
+- Requires **Administrator** permission
+
+---
+
+### `/embed` — Manage Messages permission
+Send a custom embed message in any channel.
+```
+/embed title: Hello! description: Welcome everyone! color: red
 ```
 
+| Option | Description |
+|---|---|
+| `title` | The big bold heading |
+| `description` | The main text |
+| `color` | red, green, blue, gold, purple |
+| `image` | Upload a file directly |
+| `image_url` | Paste an image/video link |
+
 ---
 
-## 🔄 Updating the bot
+## 🔄 How to update the bot
 
-1. Edit your files
-2. Push to GitHub
-3. Railway auto-redeploys in ~30 seconds
+1. Edit `bot.py` on GitHub
+2. Click **Commit changes**
+3. Railway auto-redeploys in ~30 seconds ✅
+
+---
+
+## 💡 Tips
+
+- The bot works on **multiple servers** at the same time
+- Each server can set its **own channel** using `/setchannel`
+- If no channel is set, bot automatically uses the **first available channel**
+- The PRIDE banner shows on **every** welcome, goodbye and `/embed` message
