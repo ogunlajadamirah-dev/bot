@@ -6,7 +6,10 @@ import random
 
 # ─── Config from environment variables (Railway) ──────────────────
 TOKEN = os.environ["DISCORD_TOKEN"]
-PRIDE_BANNER_URL = os.environ.get("PRIDE_BANNER_URL", "")
+
+# Validate PRIDE_BANNER_URL — only use if it starts with https://
+_raw_url = os.environ.get("PRIDE_BANNER_URL", "").strip()
+PRIDE_BANNER_URL = _raw_url if _raw_url.startswith("https://") else ""
 # ──────────────────────────────────────────────────────────────────
 
 intents = discord.Intents.default()
@@ -48,12 +51,10 @@ WELCOME_TIPS = [
 
 
 def get_channel(guild: discord.Guild):
-    # If admin picked a channel use it
     if guild.id in guild_channels:
         ch = guild.get_channel(guild_channels[guild.id])
         if ch:
             return ch
-    # Otherwise auto find first channel bot can talk in
     for ch in guild.text_channels:
         if ch.permissions_for(guild.me).send_messages:
             return ch
@@ -66,11 +67,10 @@ async def on_ready():
     await tree.sync()
     await bot.change_presence(
         status=discord.Status.online,
-        activity=discord.Activity(
-            type=discord.ActivityType.watching, name="over the server 👀"
-        )
+        activity=discord.Activity(type=discord.ActivityType.watching, name="over the server 👀")
     )
     print(f"✅ Bot is online as {bot.user}")
+    print(f"🖼️ Banner URL: {PRIDE_BANNER_URL if PRIDE_BANNER_URL else 'Not set — skipping banner'}")
 
 
 # ─── /setchannel ─────────────────────────────────────────────────
@@ -94,7 +94,7 @@ async def setchannel(interaction: discord.Interaction, channel: discord.TextChan
 async def setchannel_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
         await interaction.response.send_message(
-            "❌ You need **Administrator** permission to use this.", ephemeral=True
+            "❌ You need **Administrator** permission.", ephemeral=True
         )
 
 
@@ -179,7 +179,7 @@ async def embed_command(
     embed.set_footer(text=f"Sent by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
     if image:
         embed.set_image(url=image.url)
-    elif image_url:
+    elif image_url and image_url.startswith("https://"):
         embed.set_image(url=image_url)
     elif PRIDE_BANNER_URL:
         embed.set_image(url=PRIDE_BANNER_URL)
