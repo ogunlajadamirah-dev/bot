@@ -23,7 +23,7 @@ friendbot/
 |---|---|
 | 🎉 Welcome embed | Sent automatically when someone joins |
 | 👋 Goodbye embed | Sent automatically when someone leaves |
-| 🔍 Auto channel | Bot finds the first available channel automatically — no setup needed |
+| 🔍 Auto channel | Bot finds the first available channel automatically |
 | 🎲 Random messages | Fun unique messages every time |
 | 💡 Random tips | Each welcome shows a random tip for new members |
 | 📊 Stats | Shows account age and member count |
@@ -57,18 +57,25 @@ friendbot/
 
 | Variable | Value |
 |---|---|
-| `DISCORD_TOKEN` | Your bot token from Step 1 |
-| `PRIDE_BANNER_URL` | CDN link of your pride video/image (optional) |
+| `DISCORD_TOKEN` | Your bot token |
+| `PRIDE_BANNER_URL` | `https://files.catbox.moe/f5s1tn.gif` |
 
 5. Railway deploys automatically 🎉
 
 ---
 
-## 📢 How to get PRIDE_BANNER_URL
+## 📢 PRIDE Banner
 
-1. Upload `pride.webp` to any Discord channel
-2. Right-click the file → **Copy Link**
-3. Paste it as the value of `PRIDE_BANNER_URL` in Railway
+The banner is hosted on catbox.moe and never expires:
+```
+https://files.catbox.moe/f5s1tn.gif
+```
+
+If you ever want to change it:
+1. Go to [catbox.moe](https://catbox.moe)
+2. Upload your new image or gif
+3. Copy the direct link e.g. `https://files.catbox.moe/xxxxxx.gif`
+4. Update `PRIDE_BANNER_URL` in Railway ✅
 
 ---
 
@@ -115,5 +122,5 @@ Send a custom embed message in any channel.
 
 - The bot works on **multiple servers** at the same time
 - Each server can set its **own channel** using `/setchannel`
-- If no channel is set, bot automatically uses the **first available channel**
-- The PRIDE banner shows on **every** welcome, goodbye and `/embed` message
+- If no channel is set bot automatically uses the **first available channel**
+- The PRIDE banner shows on every welcome goodbye and `/embed` message
